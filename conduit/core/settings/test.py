@@ -17,15 +17,12 @@ class TestAppSettings(AppSettings):
 
     logging_level: int = logging.DEBUG
 
+    database_url: str = "sqlite+aiosqlite:///./conduit_test.db"
+
     class Config(AppSettings.Config):
         env_file = ".env.test"
 
     @computed_field  # type: ignore
     @property
     def sqlalchemy_engine_props(self) -> dict:
-        return dict(
-            url=self.sql_db_uri,
-            echo=False,
-            poolclass=NullPool,
-            isolation_level="AUTOCOMMIT",
-        )
+        return dict(url=self.sql_db_uri, echo=False, poolclass=NullPool)

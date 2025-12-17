@@ -16,6 +16,8 @@ class DevAppSettings(AppSettings):
 
     logging_level: int = logging.DEBUG
 
+    database_url: str = "sqlite+aiosqlite:///./conduit_dev.db"
+
     class Config(AppSettings.Config):
         env_file = ".env.dev"
 
