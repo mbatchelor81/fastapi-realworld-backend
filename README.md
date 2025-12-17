@@ -25,15 +25,11 @@ It is built with FastAPI, a modern, fast (high-performance), web framework for b
 
 ## Installation
 
-Create a virtual environment:
+Create a virtual environment and install dependencies:
 
 ```sh
-make ve
-```
-
-Install dependencies:
-
-```sh
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -59,25 +55,25 @@ You must have ``docker`` and ``docker-compose`` installed on your machine to sta
 Setup PostgreSQL database with docker-compose:
 
 ```sh
-make docker_build_postgres
+docker-compose up -d postgres --build
 ```
 
 Run the migrations:
 
 ```sh
-make migrate
+alembic upgrade head
 ```
 
 Run the application server:
 
 ```sh
-make runserver
+uvicorn conduit.app:app --host 0.0.0.0
 ```
 
 Also, you can run the fully Dockerized application with `docker-compose`:
 
 ```sh
-make docker_build
+docker-compose up -d --build
 ```
 
 And after that run migrations:
@@ -100,13 +96,13 @@ POSTGRES_DB=conduit_test
 Then run the tests:
 
 ```sh
-make test
+APP_ENV=test python -m pytest -v ./tests
 ```
 
 Or run the tests with coverage:
 
 ```sh
-make test-cov
+APP_ENV=test python -m pytest --cov=./conduit ./tests
 ```
 
 Run Conduit Postman collection tests
