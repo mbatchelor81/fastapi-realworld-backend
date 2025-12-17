@@ -13,3 +13,4 @@ google_credentials.json
 ./test.py
 .venv
 node_modules
+*.db
