@@ -270,14 +270,15 @@ async def seed_database() -> None:
         # Create users
         users = []
         for user_data in SAMPLE_USERS:
+            now = datetime.utcnow()
             user = User(
                 username=user_data["username"],
                 email=user_data["email"],
                 password_hash=get_password_hash(user_data["password"]),
                 bio=user_data["bio"],
                 image_url=None,
-                created_at=datetime.utcnow(),
-                updated_at=None,
+                created_at=now,
+                updated_at=now,
             )
             session.add(user)
             users.append(user)
@@ -302,14 +303,15 @@ async def seed_database() -> None:
         articles = []
         for article_data in SAMPLE_ARTICLES:
             author = users[article_data["author_index"]]
+            now = datetime.utcnow()
             article = Article(
                 author_id=author.id,
                 slug=slugify(article_data["title"]),
                 title=article_data["title"],
                 description=article_data["description"],
                 body=article_data["body"],
-                created_at=datetime.utcnow(),
-                updated_at=None,
+                created_at=now,
+                updated_at=now,
             )
             session.add(article)
             articles.append((article, article_data["tags"]))
@@ -342,12 +344,13 @@ async def seed_database() -> None:
         for comment_data in comments_data:
             article, _ = articles[comment_data["article_index"]]
             author = users[comment_data["author_index"]]
+            now = datetime.utcnow()
             comment = Comment(
                 article_id=article.id,
                 author_id=author.id,
                 body=comment_data["body"],
-                created_at=datetime.utcnow(),
-                updated_at=None,
+                created_at=now,
+                updated_at=now,
             )
             session.add(comment)
         
