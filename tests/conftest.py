@@ -8,7 +8,6 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy_utils import create_database, database_exists, drop_database
 
 from conduit.app import create_app
 from conduit.core.config import get_app_settings
@@ -34,33 +33,19 @@ def check_app_env_mode_enabled() -> None:
     assert os.getenv("APP_ENV") == "test"
 
 
-@pytest.fixture(scope="session")
-def create_test_db(settings: BaseAppSettings) -> Generator[None, None, None]:
-    test_db_sql_uri = settings.sql_db_uri.set(drivername="postgresql")
-
-    if database_exists(url=test_db_sql_uri):
-        drop_database(url=test_db_sql_uri)
-
-    create_database(url=test_db_sql_uri)
-    yield
-
-    drop_database(url=test_db_sql_uri)
-
-
 @pytest.fixture(autouse=True)
 def create_tables(settings: BaseAppSettings) -> Generator[None, None, None]:
-    engine = create_engine(
-        url=settings.sql_db_uri.set(drivername="postgresql"),
-        isolation_level="AUTOCOMMIT",
-    )
+    sync_db_url = settings.sql_db_uri.replace("+aiosqlite", "")
+    engine = create_engine(url=sync_db_url)
     Base.metadata.create_all(bind=engine)
     yield
 
     Base.metadata.drop_all(bind=engine)
+    engine.dispose()
 
 
 @pytest.fixture(scope="session")
-def application(create_test_db: SetupFixture) -> FastAPI:
+def application() -> FastAPI:
     return create_app()
 
 

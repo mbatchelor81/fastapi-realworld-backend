@@ -13,19 +13,18 @@ For more information on how this works with other frontends/backends, head over 
 
 
 ## Description
-This project is a Python-based API that uses PostgreSQL as its database.
+This project is a Python-based API that uses SQLite as its database for simple local development.
 It is built with FastAPI, a modern, fast (high-performance), web framework for building APIs with Python 3 based on standard Python type hints.
 
 ## Prerequisites
 - Python 3.12
-- FastAPI
-- PostgreSQL
-- Pytest
-- Docker
+- Node.js (for frontend)
 
-## Installation
+## Quick Start
 
-Create a virtual environment and install dependencies:
+### Backend
+
+1. Create a virtual environment and install dependencies:
 
 ```sh
 python3 -m venv .venv
@@ -33,67 +32,52 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Configuration
---------------
+2. Copy the example environment file:
 
-Replace `.env.example` with real `.env`, changing placeholders
+```sh
+cp .env.example .env
+```
+
+3. Run the backend:
+
+```sh
+python app.py
+```
+
+The API will be available at http://localhost:8000. The SQLite database will be automatically created on first run.
+
+### Frontend
+
+1. Install dependencies:
+
+```sh
+cd frontend
+npm install
+```
+
+2. Run the frontend:
+
+```sh
+npm run dev
+```
+
+The frontend will be available at http://localhost:3000.
+
+## Configuration
+
+The application uses environment variables for configuration. Copy `.env.example` to `.env` and modify as needed:
 
 ```
 SECRET_KEY=your_secret_key
-POSTGRES_USER=your_postgres_user
-POSTGRES_PASSWORD=your_postgres_password
-POSTGRES_DB=your_postgres_db
-POSTGRES_HOST=your_postgres_host
-POSTGRES_PORT=your_postgres_port
 JWT_SECRET_KEY=your_jwt_secret_key
+DATABASE_URL=sqlite+aiosqlite:///./conduit.db
 ```
 
-Run with Docker
---------------
-You must have ``docker`` and ``docker-compose`` installed on your machine to start this application.
-
-Setup PostgreSQL database with docker-compose:
-
-```sh
-docker-compose up -d postgres --build
-```
-
-Run the migrations:
-
-```sh
-alembic upgrade head
-```
-
-Run the application server:
-
-```sh
-uvicorn conduit.app:app --host 0.0.0.0
-```
-
-Also, you can run the fully Dockerized application with `docker-compose`:
-
-```sh
-docker-compose up -d --build
-```
-
-And after that run migrations:
-
-```sh
-docker exec -it conduit-api alembic upgrade head
-```
-
-Run tests
----------
+## Run tests
 
 Tests for this project are defined in the ``tests/`` folder.
 
-For running tests, you can have to create separate `.env.test` file the same as `.env` file, but with different database name.:
-
-```
-POSTGRES_DB=conduit_test
-```
-
-Then run the tests:
+Run the tests:
 
 ```sh
 APP_ENV=test python -m pytest -v ./tests
@@ -105,8 +89,7 @@ Or run the tests with coverage:
 APP_ENV=test python -m pytest --cov=./conduit ./tests
 ```
 
-Run Conduit Postman collection tests
----------
+## Run Conduit Postman collection tests
 
 For running tests for local application:
 
@@ -114,12 +97,16 @@ For running tests for local application:
 APIURL=http://127.0.0.1:8000/api ./postman/run-api-tests.sh
 ```
 
-For running tests for fully Dockerized application:
+## Web routes
+
+All routes are available on / or /redoc paths with Swagger or ReDoc.
+
+## Advanced: Using Docker (Optional)
+
+If you prefer to use Docker, you can still use the docker-compose setup:
 
 ```sh
-APIURL=http://127.0.0.1:8080/api ./postman/run-api-tests.sh
+docker-compose up -d --build
 ```
 
-Web routes
------------
-    All routes are available on / or /redoc paths with Swagger or ReDoc.
+Note: The Docker setup uses PostgreSQL. Make sure to configure the appropriate environment variables for PostgreSQL in your `.env` file if using Docker.
