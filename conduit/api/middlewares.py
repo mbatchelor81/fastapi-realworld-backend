@@ -33,13 +33,16 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
         elapsed_time = datetime.now() - last_request
 
         if elapsed_time > self.rate_limit_duration:
+            # Reset the window
             request_count = 1
+            window_start = datetime.now()
         else:
             if request_count >= self.rate_limit_requests:
                 return RateLimitExceededException.get_response()
             request_count += 1
+            window_start = last_request  # Keep the original window start time
 
-        self.request_counts[client_ip] = (request_count, datetime.now())
+        self.request_counts[client_ip] = (request_count, window_start)
 
         response = await call_next(request)
         return response

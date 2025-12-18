@@ -14,3 +14,4 @@ google_credentials.json
 .venv
 node_modules
 *.db
+demo.md

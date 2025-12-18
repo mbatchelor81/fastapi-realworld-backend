@@ -101,12 +101,3 @@ APIURL=http://127.0.0.1:8000/api ./postman/run-api-tests.sh
 
 All routes are available on / or /redoc paths with Swagger or ReDoc.
 
-## Advanced: Using Docker (Optional)
-
-If you prefer to use Docker, you can use the docker-compose setup:
-
-```sh
-docker-compose up -d --build
-```
-
-The Docker setup uses the same SQLite database configuration as local development.
