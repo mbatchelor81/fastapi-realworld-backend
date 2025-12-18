@@ -2,13 +2,16 @@
 """
 Seed script to populate the database with sample data.
 Run with: python seed_data.py
+Use --force to clear existing data and reseed.
 """
+import argparse
 import asyncio
 import os
 from datetime import datetime
 
 import bcrypt
 from slugify import slugify  # from python-slugify package
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -254,7 +257,7 @@ A well-designed database is the foundation of a successful application.""",
 ]
 
 
-async def seed_database() -> None:
+async def seed_database(force: bool = False) -> None:
     """Seed the database with sample data."""
     os.environ.setdefault("APP_ENV", "dev")
     settings = get_app_settings()
@@ -267,6 +270,29 @@ async def seed_database() -> None:
         await conn.run_sync(Base.metadata.create_all)
     
     async with async_session() as session:
+        # Check if data already exists
+        result = await session.execute(select(func.count()).select_from(User))
+        user_count = result.scalar()
+        if user_count > 0:
+            if force:
+                print("Force flag set. Clearing existing data...")
+                await session.execute(Comment.__table__.delete())
+                await session.execute(Follower.__table__.delete())
+                await session.execute(ArticleTag.__table__.delete())
+                await session.execute(Article.__table__.delete())
+                await session.execute(Tag.__table__.delete())
+                await session.execute(User.__table__.delete())
+                await session.commit()
+                print("Existing data cleared.")
+            else:
+                print(f"Database already has {user_count} users. Skipping seed.")
+                print("Use --force to clear and reseed.")
+                print("\nExisting login credentials:")
+                for user in SAMPLE_USERS:
+                    print(f"  - Email: {user['email']}, Password: {user['password']}")
+                await engine.dispose()
+                return
+        
         # Create users
         users = []
         for user_data in SAMPLE_USERS:
@@ -390,4 +416,7 @@ async def seed_database() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(seed_database())
+    parser = argparse.ArgumentParser(description="Seed the database with sample data.")
+    parser.add_argument("--force", action="store_true", help="Clear existing data and reseed")
+    args = parser.parse_args()
+    asyncio.run(seed_database(force=args.force))
