@@ -35,7 +35,7 @@ This creates sample users, articles, tags, and comments. Login credentials will 
 ## Step 5: Run the Backend (Terminal 1)
 Start the FastAPI server:
 ```bash
-uvicorn app:app --reload
+uvicorn conduit.app:app --reload
 ```
 
 The API will be available at `http://localhost:8000`
@@ -56,7 +56,7 @@ The frontend will be available at `http://localhost:3000`
 
 ## Step 8: Verify Setup (Terminal 3)
 Open a **third terminal** to run tests or interact with the API:
-- Backend API docs: `http://localhost:8000/docs`
+- Backend API docs: `http://localhost:8000/`
 - Frontend app: `http://localhost:3000`
 - Run backend tests: `pytest`
 
