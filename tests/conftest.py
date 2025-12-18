@@ -120,7 +120,9 @@ async def test_user(
     user_repository: IUserRepository,
     user_to_create: CreateUserDTO,
 ) -> UserDTO:
-    return await user_repository.add(session=session, create_item=user_to_create)
+    user = await user_repository.add(session=session, create_item=user_to_create)
+    await session.commit()
+    return user
 
 
 @pytest.fixture
@@ -130,9 +132,11 @@ async def test_article(
     article_to_create: CreateArticleDTO,
     test_user: UserDTO,
 ) -> ArticleDTO:
-    return await article_service.create_new_article(
+    article = await article_service.create_new_article(
         session=session, author_id=test_user.id, article_to_create=article_to_create
     )
+    await session.commit()
+    return article
 
 
 @pytest.fixture

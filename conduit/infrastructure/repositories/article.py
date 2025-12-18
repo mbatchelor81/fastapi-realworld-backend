@@ -167,7 +167,7 @@ class ArticleRepository(IArticleRepository):
                 )
                 .label("favorited"),
                 # Concatenate tags.
-                func.string_agg(Tag.tag, ", ").label("tags"),
+                func.group_concat(Tag.tag, ", ").label("tags"),
             )
             .join(User, Article.author_id == User.id)
             .join(ArticleTag, Article.id == ArticleTag.article_id, isouter=True)
@@ -306,7 +306,7 @@ class ArticleRepository(IArticleRepository):
                 )
                 .label("favorited"),
                 # Concatenate tags.
-                func.string_agg(Tag.tag, ", ").label("tags"),
+                func.group_concat(Tag.tag, ", ").label("tags"),
             )
             .outerjoin(User, Article.author_id == User.id)
             .outerjoin(ArticleTag, Article.id == ArticleTag.article_id)

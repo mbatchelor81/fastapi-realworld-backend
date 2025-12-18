@@ -15,8 +15,8 @@ class UserIDData(BaseModel):
 class UserBaseData(BaseModel):
     email: str
     username: str
-    bio: str
-    image: str
+    bio: str | None
+    image: str | None
     token: str
 
 

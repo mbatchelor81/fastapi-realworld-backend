@@ -1,5 +1,5 @@
 import abc
-from collections.abc import Collection, Mapping
+from collections.abc import Collection
 from typing import Any
 
 from conduit.domain.dtos.user import CreateUserDTO, UpdateUserDTO, UserDTO

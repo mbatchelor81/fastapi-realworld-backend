@@ -2,18 +2,21 @@
 """
 Seed script to populate the database with sample data.
 Run with: python seed_data.py
+Use --force to clear existing data and reseed.
 """
+import argparse
 import asyncio
 import os
 from datetime import datetime
 
 import bcrypt
 from slugify import slugify  # from python-slugify package
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from conduit.core.config import get_app_settings
-from conduit.infrastructure.models import Article, Base, Comment, Tag, ArticleTag, User
+from conduit.infrastructure.models import Article, Base, Comment, Follower, Tag, ArticleTag, User
 
 
 def get_password_hash(password: str) -> str:
@@ -254,7 +257,7 @@ A well-designed database is the foundation of a successful application.""",
 ]
 
 
-async def seed_database() -> None:
+async def seed_database(force: bool = False) -> None:
     """Seed the database with sample data."""
     os.environ.setdefault("APP_ENV", "dev")
     settings = get_app_settings()
@@ -267,17 +270,41 @@ async def seed_database() -> None:
         await conn.run_sync(Base.metadata.create_all)
     
     async with async_session() as session:
+        # Check if data already exists
+        result = await session.execute(select(func.count()).select_from(User))
+        user_count = result.scalar()
+        if user_count > 0:
+            if force:
+                print("Force flag set. Clearing existing data...")
+                await session.execute(Comment.__table__.delete())
+                await session.execute(Follower.__table__.delete())
+                await session.execute(ArticleTag.__table__.delete())
+                await session.execute(Article.__table__.delete())
+                await session.execute(Tag.__table__.delete())
+                await session.execute(User.__table__.delete())
+                await session.commit()
+                print("Existing data cleared.")
+            else:
+                print(f"Database already has {user_count} users. Skipping seed.")
+                print("Use --force to clear and reseed.")
+                print("\nExisting login credentials:")
+                for user in SAMPLE_USERS:
+                    print(f"  - Email: {user['email']}, Password: {user['password']}")
+                await engine.dispose()
+                return
+        
         # Create users
         users = []
         for user_data in SAMPLE_USERS:
+            now = datetime.utcnow()
             user = User(
                 username=user_data["username"],
                 email=user_data["email"],
                 password_hash=get_password_hash(user_data["password"]),
                 bio=user_data["bio"],
                 image_url=None,
-                created_at=datetime.utcnow(),
-                updated_at=None,
+                created_at=now,
+                updated_at=now,
             )
             session.add(user)
             users.append(user)
@@ -302,14 +329,15 @@ async def seed_database() -> None:
         articles = []
         for article_data in SAMPLE_ARTICLES:
             author = users[article_data["author_index"]]
+            now = datetime.utcnow()
             article = Article(
                 author_id=author.id,
                 slug=slugify(article_data["title"]),
                 title=article_data["title"],
                 description=article_data["description"],
                 body=article_data["body"],
-                created_at=datetime.utcnow(),
-                updated_at=None,
+                created_at=now,
+                updated_at=now,
             )
             session.add(article)
             articles.append((article, article_data["tags"]))
@@ -342,17 +370,41 @@ async def seed_database() -> None:
         for comment_data in comments_data:
             article, _ = articles[comment_data["article_index"]]
             author = users[comment_data["author_index"]]
+            now = datetime.utcnow()
             comment = Comment(
                 article_id=article.id,
                 author_id=author.id,
                 body=comment_data["body"],
-                created_at=datetime.utcnow(),
-                updated_at=None,
+                created_at=now,
+                updated_at=now,
             )
             session.add(comment)
         
         await session.flush()
         print(f"Created {len(comments_data)} comments")
+        
+        # Create follower relationships so "Your Feed" shows articles
+        # johndoe follows janedoe and bobsmith
+        # janedoe follows johndoe
+        # bobsmith follows johndoe and janedoe
+        follower_relationships = [
+            {"follower_index": 0, "following_index": 1},  # johndoe follows janedoe
+            {"follower_index": 0, "following_index": 2},  # johndoe follows bobsmith
+            {"follower_index": 1, "following_index": 0},  # janedoe follows johndoe
+            {"follower_index": 2, "following_index": 0},  # bobsmith follows johndoe
+            {"follower_index": 2, "following_index": 1},  # bobsmith follows janedoe
+        ]
+        
+        for rel in follower_relationships:
+            follower = Follower(
+                follower_id=users[rel["follower_index"]].id,
+                following_id=users[rel["following_index"]].id,
+                created_at=datetime.utcnow(),
+            )
+            session.add(follower)
+        
+        await session.flush()
+        print(f"Created {len(follower_relationships)} follower relationships")
         
         await session.commit()
     
@@ -364,4 +416,7 @@ async def seed_database() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(seed_database())
+    parser = argparse.ArgumentParser(description="Seed the database with sample data.")
+    parser.add_argument("--force", action="store_true", help="Clear existing data and reseed")
+    args = parser.parse_args()
+    asyncio.run(seed_database(force=args.force))
