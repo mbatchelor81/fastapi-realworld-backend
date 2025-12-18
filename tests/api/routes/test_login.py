@@ -17,7 +17,7 @@ async def test_user_successful_login(
     "credentials,",
     (
         {"email": "invalid@gmail.com", "password": "password"},
-        {"email": "test@gmail.com", "password": "invalid"},
+        {"email": "test@gmail.com", "password": "wrongpass"},
     ),
 )
 @pytest.mark.anyio

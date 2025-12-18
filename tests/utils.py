@@ -12,7 +12,9 @@ async def create_another_test_user(
     create_user_dto = CreateUserDTO(
         username="temp-user", email="temp-user@gmail.com", password="password"
     )
-    return await user_repository.add(session=session, create_item=create_user_dto)
+    user = await user_repository.add(session=session, create_item=create_user_dto)
+    await session.commit()
+    return user
 
 
 async def create_another_test_article(
@@ -24,6 +26,8 @@ async def create_another_test_article(
         body="Test Body",
         tags=["tag1", "tag2", "tag3"],
     )
-    return await article_repository.add(
+    article = await article_repository.add(
         session=session, author_id=author_id, create_item=create_article_dto
     )
+    await session.commit()
+    return article

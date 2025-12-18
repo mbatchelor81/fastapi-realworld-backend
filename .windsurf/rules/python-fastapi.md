@@ -1,6 +1,7 @@
 ---
 trigger: glob
 globs: conduit/**/*.py
+description: Use this when working on any python file in this project
 ---
 # Python & FastAPI Best Practices
 
