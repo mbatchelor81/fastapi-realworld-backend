@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from conduit.core.config import get_app_settings
-from conduit.infrastructure.models import Article, Base, Comment, Tag, ArticleTag, User
+from conduit.infrastructure.models import Article, Base, Comment, Follower, Tag, ArticleTag, User
 
 
 def get_password_hash(password: str) -> str:
@@ -356,6 +356,29 @@ async def seed_database() -> None:
         
         await session.flush()
         print(f"Created {len(comments_data)} comments")
+        
+        # Create follower relationships so "Your Feed" shows articles
+        # johndoe follows janedoe and bobsmith
+        # janedoe follows johndoe
+        # bobsmith follows johndoe and janedoe
+        follower_relationships = [
+            {"follower_index": 0, "following_index": 1},  # johndoe follows janedoe
+            {"follower_index": 0, "following_index": 2},  # johndoe follows bobsmith
+            {"follower_index": 1, "following_index": 0},  # janedoe follows johndoe
+            {"follower_index": 2, "following_index": 0},  # bobsmith follows johndoe
+            {"follower_index": 2, "following_index": 1},  # bobsmith follows janedoe
+        ]
+        
+        for rel in follower_relationships:
+            follower = Follower(
+                follower_id=users[rel["follower_index"]].id,
+                following_id=users[rel["following_index"]].id,
+                created_at=datetime.utcnow(),
+            )
+            session.add(follower)
+        
+        await session.flush()
+        print(f"Created {len(follower_relationships)} follower relationships")
         
         await session.commit()
     
