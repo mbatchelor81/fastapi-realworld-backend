@@ -1,4 +1,8 @@
 import os
+
+# Set test environment before any app imports
+os.environ["APP_ENV"] = "test"
+
 from collections.abc import Generator
 from datetime import datetime
 from typing import TypeAlias
